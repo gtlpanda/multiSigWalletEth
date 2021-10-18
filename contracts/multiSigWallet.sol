@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 contract multiSigWallet {
     // this is the transaction itself event aka how much we are sending, who is sending, and the balance
-    event deposit(address indexed sender, uint256 amount, uint256 balance);
+    event Deposit(address indexed sender, uint256 amount, uint256 balance);
 
     // here we are going to design some info to be emiited when we call the functions
     event SubmitTransaction(
@@ -38,9 +38,7 @@ contract multiSigWallet {
     mapping(uint256 => mapping(address => bool)) public isConfirmed;
 
     // the contructor will have the owners of the multisig wallet and the number of confirmations
-    constructor(address[] memory _owners, uint256 _numOfConfirmationsRequired)
-        public
-    {
+    constructor(address[] memory _owners, uint256 _numOfConfirmationsRequired) {
         require(_owners.length > 0, "owners required"); // input validation to make sure that owner array isnt empty
         require(
             _numOfConfirmationsRequired > 0 &&
@@ -61,24 +59,15 @@ contract multiSigWallet {
         numOfConfirmationsRequired = _numOfConfirmationsRequired;
     }
 
-    // // who is the transaction going to, whats the value, and what data is there to required to call another contract from
-    // function submitTransaction(address to, uint value, bytes memory data) public onlyOwner {
-    //     // we need the id of the transaction we are about to create
-    //     uint txIndex = transactions.length; // first trans will have 0, second will be
-    //     //push the transaction to the tranctions array by using the struct
-    //     // array name pushes struct
-    //     transactions.push(
-    //         Transaction({
-    //             to: _to,
-    //             value: _value,
-    //             data: _data,
-    //             executed: false,
-    //             numConfirmations: 0
-    //         })
-    //     );
+    //fallback function to send money to the contract in ether
+    receive() external payable {
+        emit Deposit(msg.sender, msg.value, address(this).balance);
+    }
 
-    //     emit submitTransaction(msg.sender, txIndex, _to, _value, _data);
-    // }
+    // helper function to deposit into remix IDE
+    function deposit() external payable {
+        emit Deposit(msg.sender, msg.value, address(this).balance);
+    }
 
     modifier onlyOwner() {
         require(isOwner[msg.sender], "not owner");
@@ -106,6 +95,31 @@ contract multiSigWallet {
         require(!isConfirmed[_txIndex][msg.sender], "tx already confirmed");
         _;
     }
+
+    // // who is the transaction going to, whats the value, and what data is there to required to call another contract from
+    // function submitTransaction(address to, uint value, bytes memory data) public onlyOwner {
+    //     // we need the id of the transaction we are about to create
+    //     uint txIndex = transactions.length; // first trans will have 0, second will be
+    //     //push the transaction to the tranctions array by using the struct
+    //     // array name pushes struct
+    //     transactions.push(
+    //         Transaction({
+    //             to: _to,
+    //             value: _value,
+    //             data: _data,
+    //             executed: false,
+    //             numConfirmations: 0
+    //         })
+    //     );
+
+    //     emit submitTransaction(msg.sender, txIndex, _to, _value, _data);
+    // }
+
+    // when you deploy the contract, you need to enter 3 owner addresses and a # of confirmations required
+    // ["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4","0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2","0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c"],2
+    // we need to deposit ether
+    // for demo purposes - address, ether, data
+    // 0x03C6FcED478cBbC9a4FAB34eF9f40767739D1Ff7, 1000000000000000000, 0x0
 
     function submitTransaction(
         address _to,
